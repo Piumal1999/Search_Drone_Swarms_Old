@@ -24,6 +24,7 @@ RADIUS_TARGET = 130
 MASS = 10 # Drone Mass, used to calculate force
 HOP_AHEAD = 60 # distance of prevision
 AVOID_DISTANCE = 30 # distance to avoid collision
+COMMUNICATION_DISTANCE = 300 # distance to communicate
 
 # Colors
 BLACK = (0,0,0)

@@ -123,7 +123,7 @@ class Simulation(object):
         self.stop_watch = 0
         self.rate = rate
         self.time_executing = 0 
-        self.found = False
+        # self.found = False
         # variables for obstacles
         self.obstacles = Obstacles(rate.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
         self.list_obst = []
@@ -179,12 +179,13 @@ class Simulation(object):
     def append_uav(self, drone):
         self.swarm.append(drone)
 
-    def set_target(self, target, found=False):
+    # def set_target(self, target, found=False):
+    def set_target(self, target):
         self.target_simulation = target
         for _ in self.swarm:
             _.set_target(target)
-            if found == True:
-                _.found = True
+            # if found == True:
+            #     _.found = True
 
     def set_time_target(self):
         self.rate.set_time_target(time.time() - self.start_watch)
@@ -261,8 +262,8 @@ class Simulation(object):
         self.draw()
 
         # Target is Found: pass it to all drones
-        if self.found:
-            self.set_target(self.target_simulation, found = True)
+        # if self.found:
+        #     self.set_target(self.target_simulation, found = True)
 
         if self.start_watch == 0:
             self.start_watch = time.time()
@@ -352,4 +353,4 @@ class Simulation(object):
 
         # Prepare ALGORITHM TO SEARCH PATTERN
         self.rate.in_algorithms[self.rate.current_repetition].prepare_simulation(self, target)
-        self.found = False
+        # self.found = False

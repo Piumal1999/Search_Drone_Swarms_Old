@@ -360,6 +360,12 @@ class Vehicle(object):
             v = self.velocity.length()
             pg.draw.line(self.window, self.color_target, self.location, self.location + self.velocity.normalize()*v*20 , 1)
 
+        # Draw communication range circle
+        pg.draw.circle(window, (0, 255, 0), self.location, COMMUNICATION_DISTANCE, 1)
+
+        # Draw search radius
+        # pg.draw.circle(window, (255, 0, 0), self.location, RADIUS_TARGET, 1)
+    
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)
         self.all_sprites.update(self.location,self.rotation)

@@ -75,7 +75,14 @@ class DefineTargetScan(ScanInterface):
             
             if _.reached_goal(simulation.target_simulation):
                 #print(f"Drone {index} atingiu o target")
-                simulation.found = True
+                _.found = True
+
+                # loop through simulation.swarm, communicate to drones with are closer than the COMMUNICATION_DISTANCE
+                for drone in simulation.swarm:
+                    if (_.location - drone.location).length() < COMMUNICATION_DISTANCE:
+                        drone.found = True
+
+                # simulation.found = True
                 simulation.set_time_target()
 
 class RandoWalkScan(ScanInterface):
@@ -109,7 +116,14 @@ class RowScan(ScanInterface):
             self.draw_legend( _ , simulation, index)
 
             if _.reached_goal(simulation.target_simulation):
-                simulation.found = True
+                _.found = True
+
+                # loop through simulation.swarm, communicate to drones with are closer than the COMMUNICATION_DISTANCE
+                for drone in simulation.swarm:
+                    if (_.location - drone.location).length() < COMMUNICATION_DISTANCE:
+                        drone.found = True
+
+                # simulation.found = True
                 simulation.set_time_target()
 
     def define_search_area(self):
