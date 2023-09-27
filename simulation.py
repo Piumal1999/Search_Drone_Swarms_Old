@@ -154,7 +154,7 @@ class Simulation(object):
 
     def generate_obstacles(self):
         # Generates obstacles
-        self.obstacles.generate_obstacles()
+        self.obstacles.generate_obstacles(fixed=True)
         self.list_obst = self.obstacles.get_coordenates()
 
     def create_swarm_uav(self, num_swarm, search_pattern = 'DefineTargetScan'):
@@ -320,7 +320,6 @@ class Simulation(object):
         self.grid_field = GridField(RESOLUTION)
 
         # new obstacles
-        self.obstacles.num_of_obstacles = self.rate.in_num_obstacles[self.rate.current_repetition]
         # Repeat scenario for new number of drones
         num_repet = self.rate.in_repetitions / len(self.rate.in_num_swarm)
         if self.rate.current_repetition > num_repet -1:
@@ -347,7 +346,20 @@ class Simulation(object):
         self.time_executing = 0 # Reset timer
 
         # set new random target for iteration
-        target = self.generate_new_random_target()
+        # target = self.generate_new_random_target()
+        # self.targets_search.append(target)
+        # self.set_target(target)
+
+        # get target from obs.csv
+        target = None
+        with open('obs.csv', 'r') as file:
+            reader = csv.reader(file)
+            for i, row in enumerate(reader):
+                for j, val in enumerate(row):
+                    if val == 'X':
+                        print(f'X: {i,j}')
+                        target = vec2(j * 100, i * 100)
+
         self.targets_search.append(target)
         self.set_target(target)
 
