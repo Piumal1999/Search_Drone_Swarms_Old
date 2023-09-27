@@ -2,6 +2,7 @@ import random
 import pygame as pg
 from utils import Tree
 from constants import *
+import csv
 
 vec2 = pg.math.Vector2
 
@@ -19,16 +20,24 @@ class Obstacles(object):
         self.all_sprites = pg.sprite.Group()
         self.all_sprites.add(self.tree)
         
-    def generate_obstacles(self):
-        self.obst = []
-        self.times_generated += 1
-        self.seed = random.seed(self.times_generated+10 )
-        valid = False
-        for _ in range(self.num_of_obstacles):
-            coord = vec2(random.uniform(200,self.map_size[0] + AVOID_OBSTACLES),
-                        random.uniform(RADIUS_TARGET,self.map_size[1])- AVOID_OBSTACLES)
+    def generate_obstacles(self, fixed):
+        if not fixed:
+            self.obst = []
+            self.times_generated += 1
+            self.seed = random.seed(self.times_generated+10 )
+            valid = False
+            for _ in range(self.num_of_obstacles):
+                coord = vec2(random.uniform(200,self.map_size[0] + AVOID_OBSTACLES),
+                            random.uniform(RADIUS_TARGET,self.map_size[1])- AVOID_OBSTACLES)
 
-            self.obst.append(coord) 
+                self.obst.append(coord) 
+        else:
+            with open('obs.csv', 'r') as file:
+                reader = csv.reader(file)
+                for i, row in enumerate(reader):
+                    for j, val in enumerate(row):
+                        if val == '1':
+                            self.obst.append(vec2(j * 100, i * 100))
                                   
     def get_coordenates(self):
         return self.obst
