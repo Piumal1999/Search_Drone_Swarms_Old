@@ -4,6 +4,7 @@ import csv
 import numpy as np
 # importing "heapq" to implement heap queue
 import heapq
+import random
 
 
 vec = pg.math.Vector2
@@ -23,7 +24,7 @@ class GridField(object):
         self.cells = np.ndarray((self.rows+1, self.cols+1), dtype=Cell)
         # Resolution of grid relative to window width and height in pixels
         self.resolution = resolution
-        print(f' Grid created with  col:{self.cols} row:{self.rows}')
+        # print(f' Grid created with  col:{self.cols} row:{self.rows}')
         # self.field = [[vec(random.uniform(0,1),random.uniform(0,1)) for col in range(self.cols)] for row in range(self.rows)] # create matrix
         self.cells_ = {}  # Memory using dictionary NOT USED
         self.h_cells = []
@@ -40,11 +41,9 @@ class GridField(object):
             for y in range(0, SCREEN_HEIGHT,  blockSize):
                 # self.cells_[f'{int(x/blockSize)},{int(y/blockSize)}'] = Cell(vec(x,y), blockSize)
                 #             row                  col
-                self.cells[int(y/blockSize)][int(x/blockSize)
-                                             ] = Cell(vec(x, y), blockSize)
+                self.cells[int(y/blockSize)][int(x/blockSize)] = Cell(vec(x, y), blockSize)
                 # priority queue HEAP
-                heapq.heappush(self.h_cells,  (self.cells[int(
-                    y/blockSize)][int(x/blockSize)].state, (int(y/blockSize), int(x/blockSize))))
+                heapq.heappush(self.h_cells,  (self.cells[int(y/blockSize)][int(x/blockSize)].state, (int(y/blockSize), int(x/blockSize))))
 
         with open('obs.csv', 'r') as file:
             reader = csv.reader(file)
@@ -126,7 +125,10 @@ class GridField(object):
         return self.cells[cell[1]][cell[0]].get_cell_center()
 
     def get_cell_when_xy_is_given(self, x, y):
-        return self.cells[int(y/self.resolution)][int(x/self.resolution)]
+        try:
+            return self.cells[int(y/self.resolution)][int(x/self.resolution)]
+        except:
+            return None
 
     def get_cell_center_when_xy_is_given(self, x, y):
         return self.get_cell_when_xy_is_given(x, y).get_cell_center()
@@ -136,6 +138,12 @@ class GridField(object):
             This method will return coordenates of a cell that wasnt visited yet
         '''
         return heapq.heappop(self.h_cells)
+    
+    def get_random_cell_center(self):
+        '''
+            This method will return a random cell center
+        '''
+        return self.cells[random.randint(0, self.rows)][random.randint(0, self.cols)].get_cell_center()
 
 
 class Cell():
