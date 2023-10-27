@@ -86,13 +86,6 @@ class Simulation(object):
         for drone in self.swarm:
             drone.draw(self.screen)
 
-            p = drone.get_position()
-            col = int(p.x/RESOLUTION)
-            row = int(p.y/RESOLUTION)
-
-            # changes states of cell to visited
-            self.grid_field.change_state_cell((col, row))
-
         pygame.display.flip()
 
     def is_collision(self):
@@ -111,7 +104,7 @@ class Simulation(object):
 
             # check if cell is obstacle
             cell = self.grid_field.get_cell_when_xy_is_given(_.location.x, _.location.y)
-            if cell.state == 2:
+            if cell.state == 1:
                 return True
 
         return False
@@ -128,7 +121,7 @@ class Simulation(object):
 
     def connect_controller(self, conn, player):
         conn.send(str.encode("Connected"))
-        reply = "Reply"
+        reply = ""
         while True:
             try:
                 action = conn.recv(2048).decode()
@@ -139,6 +132,7 @@ class Simulation(object):
                 else:
                     print("Received: ", action)
                     self.swarm[player].move(action)
+                    reply = "OK"
 
                     if self.is_collision() or self.is_target_found():
                         reply = "Game Over"

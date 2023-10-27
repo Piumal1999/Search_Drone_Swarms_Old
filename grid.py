@@ -10,9 +10,8 @@ import random
 vec = pg.math.Vector2
 
 
-NOT_VISITED = 0
-VISITED = 1
-OBSTACLE = 2
+DEFAULT = 0
+OBSTACLE = 1
 
 
 class GridField(object):
@@ -64,56 +63,6 @@ class GridField(object):
                     pg.draw.rect(screen, BLACK, rect)
                 else:
                     pg.draw.rect(screen, (120, 120, 120), rect, 1)
-                # self.cells[int(y/blockSize)][int(x/blockSize)
-                #                              ].draw_center(screen)
-
-    def change_state_cell(self, cell, to_state=VISITED):
-        '''
-            Cell is visitated
-        '''
-        try:
-            self.cells[cell[1]][cell[0]].change_state(to_state)
-        except:
-            pass
-
-    def get_state_cell(self, cell):
-        '''
-            Get if cell was visisted before
-            cell: tuple with coordenates
-            return: state of the cell 
-        '''
-        try:
-            return self.cells[cell[1]][cell[0]].state
-        except:
-            return VISITED
-
-    def get_sucessors(self, cell):
-        """
-            Obtains a list of the 8-connected successors of the node at (i, j).
-
-            :param cell: position cell .
-            :type tuple: int.
-
-            :return: list of the 8-connected successors.
-            :rtype: list of cells.
-        """
-        i = cell[0]
-        j = cell[1]
-        successors = []
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                if (dx, dy) != (0, 0):
-                    x = i + dx
-                    y = j + dy
-                    # if not visited
-                    if x >= 0 and y >= 0:
-                        if self.get_state_cell((x, y)) == NOT_VISITED:
-                            successors.append(self.get_cell_center((x, y)))
-                            # successors.append((x, y))
-
-        # print(successors)
-        # input()
-        return successors
 
     def get_size(self):
         '''
@@ -132,12 +81,6 @@ class GridField(object):
 
     def get_cell_center_when_xy_is_given(self, x, y):
         return self.get_cell_when_xy_is_given(x, y).get_cell_center()
-
-    def get_cell_not_visited(self):
-        '''
-            This method will return coordenates of a cell that wasnt visited yet
-        '''
-        return heapq.heappop(self.h_cells)
     
     def get_random_cell_center(self):
         '''
@@ -155,24 +98,11 @@ class Cell():
     def __init__(self, pos, blockSize):
         self.size_block = blockSize
         self.position = pos
-        self.state = NOT_VISITED
+        self.state = DEFAULT
         self.center_in_coord_global = vec(
             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2)
 
-    # def draw_center(self, screen):
-
-    #     if self.state == NOT_VISITED:
-    #         pg.draw.circle(screen, RED, vec(
-    #             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
-    #     if self.state == VISITED:
-    #         pg.draw.circle(screen, (0, 255, 0), vec(
-    #             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
-    #     if self.state == OBSTACLE:
-    #         pass
-    #         # pg.draw.circle(screen, (0, 0, 255), vec(
-    #         #     self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
-
-    def change_state(self, state=VISITED):
+    def change_state(self, state=DEFAULT):
         if self.state != OBSTACLE:
             self.state = state
 
