@@ -5,8 +5,7 @@ from grid import GridField
 from vehicle import Vehicle
 import csv
 import socket
-import threading
-import select
+from _thread import *
 
 vec2 = pygame.math.Vector2
 
@@ -34,7 +33,6 @@ class Simulation(object):
             pass
 
         self.score = 0
-        self.game_over = False
         self.target_simulation = None
 
         # reset grid
@@ -97,80 +95,6 @@ class Simulation(object):
 
         pygame.display.flip()
 
-    def play_step(self, action=None):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                simulation.running = False
-                simulation.controller_0.join()
-                pygame.quit()
-                quit()
-
-            if action is None:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        action = [1,0,0,0]
-                    elif event.key == pygame.K_DOWN:
-                        action = [0,1,0,0]
-                    elif event.key == pygame.K_LEFT:
-                        action = [0,0,1,0]
-                    elif event.key == pygame.K_RIGHT:
-                        action = [0,0,0,1]
-
-        self.swarm[0].move(action)
-
-        game_over=False
-
-        # if collision
-        if self.is_collision():
-            game_over=True
-
-        # if drone 0 reach target game over
-        if self.swarm[0].reached_goal(self.target_simulation):
-            game_over=True
-        
-        self.update_ui()
-
-        self.game_over = game_over
-
-    def listen_thread(self, port):
-        try:
-            server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server.bind(('localhost', port))
-            
-            while self.running:
-                ready, _, _ = select.select([server], [], [], 0.1)
-                if ready:
-                    data, addr = server.recvfrom(1024)
-                    if data:
-                        action = data.decode()
-                        print(action)
-                        if action == 'W':
-                            action = [1,0,0,0]
-                        elif action == 'S':
-                            action = [0,1,0,0]
-                        elif action == 'A':
-                            action = [0,0,1,0]
-                        elif action == 'D':
-                            action = [0,0,0,1]
-                        
-                        self.swarm[port-8080].move(action)
-
-                        game_over=False
-
-                        # if collision
-                        if self.is_collision():
-                            game_over=True
-
-                        # if drone 0 reach target game over
-                        if self.swarm[port-8080].reached_goal(self.target_simulation):
-                            game_over=True
-
-                        self.game_over = game_over
-
-                self.update_ui()
-        except socket.error:
-            pass
-        
     def is_collision(self):
         """
             Checks if drone is colliding with another drone or with the limits of the screen or with an obstacle cell
@@ -192,31 +116,75 @@ class Simulation(object):
 
         return False
     
+    def is_target_found(self):
+        """
+            Checks if the drones found the target
+        """
+        for _ in self.swarm:
+            if _.reached_goal(self.target_simulation):
+                return True
+
+        return False
+
+    def connect_controller(self, conn, player):
+        conn.send(str.encode("Connected"))
+        reply = "Reply"
+        while True:
+            try:
+                action = conn.recv(2048).decode()
+
+                if not action:
+                    print("Disconnected")
+                    break
+                else:
+                    print("Received: ", action)
+                    self.swarm[player].move(action)
+
+                    if self.is_collision() or self.is_target_found():
+                        reply = "Game Over"
+
+                    print("Sending : ", reply, "to player", player)
+
+                conn.sendall(str.encode(reply))
+            except:
+                break
+
+        print("Lost connection")
+        conn.close()
+
 if __name__ == "__main__":
     simulation = Simulation()
 
-    simulation.running = True
-    controller_0 = threading.Thread(target=simulation.listen_thread, args=(8080,))
-    # controller_1 = threading.Thread(target=simulation.listen_thread, args=(8081,))
-    # controller_2 = threading.Thread(target=simulation.listen_thread, args=(8082,))
-    controller_0.start()
-    # controller_1.start()
-    # controller_2.start()
+    server = "localhost"
+    port = 8080
 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind((server, port))
+    except socket.error as e:
+        str(e)
+
+    s.listen(3)
+    print("Server Started. Connect three clients to start the simulation")
+
+    currentPlayer = 0
+    while currentPlayer < 3:
+        conn, addr = s.accept()
+        print("Connected to:", addr)
+
+        start_new_thread(simulation.connect_controller, (conn, currentPlayer))
+        currentPlayer += 1
+
+
+    simulation.running = True
     while simulation.running:
+        simulation.clock.tick(FREQUENCY)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                simulation.running = False
-                simulation.controller_0.join()
                 pygame.quit()
                 quit()
 
         simulation.update_ui()
-
-        # simulation.play_step(None)
-        if simulation.game_over:
-            simulation.reset_simulation()
-
-        simulation.clock.tick(FREQUENCY)
 
 

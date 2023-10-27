@@ -64,8 +64,8 @@ class GridField(object):
                     pg.draw.rect(screen, BLACK, rect)
                 else:
                     pg.draw.rect(screen, (120, 120, 120), rect, 1)
-                self.cells[int(y/blockSize)][int(x/blockSize)
-                                             ].draw_center(screen)
+                # self.cells[int(y/blockSize)][int(x/blockSize)
+                #                              ].draw_center(screen)
 
     def change_state_cell(self, cell, to_state=VISITED):
         '''
@@ -159,18 +159,18 @@ class Cell():
         self.center_in_coord_global = vec(
             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2)
 
-    def draw_center(self, screen):
+    # def draw_center(self, screen):
 
-        if self.state == NOT_VISITED:
-            pg.draw.circle(screen, RED, vec(
-                self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
-        if self.state == VISITED:
-            pg.draw.circle(screen, (0, 255, 0), vec(
-                self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
-        if self.state == OBSTACLE:
-            pass
-            # pg.draw.circle(screen, (0, 0, 255), vec(
-            #     self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
+    #     if self.state == NOT_VISITED:
+    #         pg.draw.circle(screen, RED, vec(
+    #             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
+    #     if self.state == VISITED:
+    #         pg.draw.circle(screen, (0, 255, 0), vec(
+    #             self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
+    #     if self.state == OBSTACLE:
+    #         pass
+    #         # pg.draw.circle(screen, (0, 0, 255), vec(
+    #         #     self.position[0] + self.size_block/2, self.position[1] + self.size_block/2), 3)
 
     def change_state(self, state=VISITED):
         if self.state != OBSTACLE:
