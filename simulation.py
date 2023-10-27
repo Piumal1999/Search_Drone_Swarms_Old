@@ -4,6 +4,9 @@ from utils import *
 from grid import GridField
 from vehicle import Vehicle
 import csv
+import socket
+import threading
+import select
 
 vec2 = pygame.math.Vector2
 
@@ -31,6 +34,7 @@ class Simulation(object):
             pass
 
         self.score = 0
+        self.game_over = False
         self.target_simulation = None
 
         # reset grid
@@ -96,6 +100,8 @@ class Simulation(object):
     def play_step(self, action=None):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                simulation.running = False
+                simulation.controller_0.join()
                 pygame.quit()
                 quit()
 
@@ -124,8 +130,47 @@ class Simulation(object):
         
         self.update_ui()
 
-        return game_over
+        self.game_over = game_over
 
+    def listen_thread(self, port):
+        try:
+            server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server.bind(('localhost', port))
+            
+            while self.running:
+                ready, _, _ = select.select([server], [], [], 0.1)
+                if ready:
+                    data, addr = server.recvfrom(1024)
+                    if data:
+                        action = data.decode()
+                        print(action)
+                        if action == 'W':
+                            action = [1,0,0,0]
+                        elif action == 'S':
+                            action = [0,1,0,0]
+                        elif action == 'A':
+                            action = [0,0,1,0]
+                        elif action == 'D':
+                            action = [0,0,0,1]
+                        
+                        self.swarm[port-8080].move(action)
+
+                        game_over=False
+
+                        # if collision
+                        if self.is_collision():
+                            game_over=True
+
+                        # if drone 0 reach target game over
+                        if self.swarm[port-8080].reached_goal(self.target_simulation):
+                            game_over=True
+
+                        self.game_over = game_over
+
+                self.update_ui()
+        except socket.error:
+            pass
+        
     def is_collision(self):
         """
             Checks if drone is colliding with another drone or with the limits of the screen or with an obstacle cell
@@ -150,9 +195,28 @@ class Simulation(object):
 if __name__ == "__main__":
     simulation = Simulation()
 
-    run = True
-    while True:
-        gameover = simulation.play_step(None)
-        if gameover:
+    simulation.running = True
+    controller_0 = threading.Thread(target=simulation.listen_thread, args=(8080,))
+    # controller_1 = threading.Thread(target=simulation.listen_thread, args=(8081,))
+    # controller_2 = threading.Thread(target=simulation.listen_thread, args=(8082,))
+    controller_0.start()
+    # controller_1.start()
+    # controller_2.start()
+
+    while simulation.running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                simulation.running = False
+                simulation.controller_0.join()
+                pygame.quit()
+                quit()
+
+        simulation.update_ui()
+
+        # simulation.play_step(None)
+        if simulation.game_over:
             simulation.reset_simulation()
+
+        simulation.clock.tick(FREQUENCY)
+
 
