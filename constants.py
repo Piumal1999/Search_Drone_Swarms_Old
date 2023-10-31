@@ -14,8 +14,8 @@ FREQUENCY = 60.0  # simulation frequency
 SAMPLE_TIME = 1.0 / FREQUENCY  # simulation sample time
 
 # Behavior Parameters
-RADIUS_TARGET = 200
-COMMUNICATION_DISTANCE = 300 # distance to communicate
+RADIUS_TARGET = 450
+COMMUNICATION_DISTANCE = 25 # distance to communicate
 
 # Colors
 BLACK = (0,0,0)

@@ -15,6 +15,8 @@ class Vehicle(object):
             :param window: pygame screen were it will be draw
         """
 
+        self.moves = 0  # Number of moves done by drone
+
         # Variables used to move drone
         self.location = vec2(x, y)  # Position in screen
 
@@ -42,9 +44,11 @@ class Vehicle(object):
             self.location.x -= STEP_SIZE
         elif action == "D":
             self.location.x += STEP_SIZE
+        elif action == "0":
+            pass
 
     def reached_goal(self, target):
-        return target and (target - self.location).length() <= RADIUS_TARGET
+        return target and (target - self.location).length() < 100
 
     def get_position(self):
         return self.location
@@ -54,8 +58,8 @@ class Vehicle(object):
             Defines shape of vehicle and draw it to screen
         """
 
-        # Draw search radius
-        pg.draw.circle(window, RED, self.location, RADIUS_TARGET, 1)
+        # Draw communication radius
+        pg.draw.circle(window, RED, self.location, COMMUNICATION_DISTANCE, 1)
 
         # Use sprite to draw drone
         self.all_sprites.draw(self.window)
