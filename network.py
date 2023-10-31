@@ -1,4 +1,5 @@
 import socket
+import json
 
 
 class Network:
@@ -18,6 +19,6 @@ class Network:
     def send(self, data):
         try:
             self.client.send(str.encode(data))
-            return self.client.recv(2048).decode()
+            return json.loads(self.client.recv(2048).decode())
         except socket.error as e:
             print(e)

@@ -6,6 +6,7 @@ from vehicle import Vehicle
 import csv
 import socket
 from _thread import *
+import json
 
 vec2 = pygame.math.Vector2
 
@@ -114,10 +115,60 @@ class Simulation(object):
             Checks if the drones found the target
         """
         for _ in self.swarm:
-            if _.reached_goal(self.target_simulation):
-                return True
+            if not _.reached_goal(self.target_simulation):
+                return False
 
+        return True
+    
+    def is_blocked_cell(self, col, row):
+        """
+            Checks if the cell is blocked
+        """
+        if self.grid_field.get_state_cell([col, row]) == 1:
+            return True
+        else:
+            # blocked by a drone
+            for _ in self.swarm:
+                if int(_.location.x / RESOLUTION) == col and int(_.location.y / RESOLUTION) == row:
+                    return True
+        
         return False
+    
+    def get_state(self, player):
+        col = int(self.swarm[player].location.x / RESOLUTION)
+        row = int(self.swarm[player].location.y / RESOLUTION)
+
+        state = [
+            self.is_blocked_cell(col-1, row-1),
+            self.is_blocked_cell(col, row-1),
+            self.is_blocked_cell(col+1, row-1),
+            self.is_blocked_cell(col-1, row),
+            self.is_blocked_cell(col+1, row),
+            self.is_blocked_cell(col-1, row+1),
+            self.is_blocked_cell(col, row+1),
+            self.is_blocked_cell(col+1, row+1),
+
+            # is target left, right, top, bottom
+            self.swarm[player].location.x < self.target_simulation.x,
+            self.swarm[player].location.y < self.target_simulation.y
+        ]
+
+        return state
+    
+    def get_score(self, player):
+        # if self.swarm[player].location.distance_to(self.target_simulation) < RADIUS_TARGET:
+        #     score = RADIUS_TARGET - (self.target_simulation - self.swarm[player].location).length()
+        # else:
+        #     score = 0
+
+        score = 0
+        for _ in self.swarm:
+            if _.location.distance_to(self.target_simulation) < RADIUS_TARGET:
+                score += RADIUS_TARGET - (self.target_simulation - _.location).length()
+            else:
+                score += 0
+
+        return score
 
     def connect_controller(self, conn, player):
         conn.send(str.encode("Connected"))
@@ -129,17 +180,43 @@ class Simulation(object):
                 if not action:
                     print("Disconnected")
                     break
+                elif action == "state":
+                    reply = self.get_state(player)
+                    print("Sending state: ", reply, "to player", player)
                 else:
+                    reply = {
+                        "game_over": False,
+                        "score": self.get_score(player),
+                        "reward": 5
+                        }
                     print("Received: ", action)
                     self.swarm[player].move(action)
-                    reply = "OK"
+                    self.swarm[player].moves += 1
 
-                    if self.is_collision() or self.is_target_found():
-                        reply = "Game Over"
+                    if self.is_collision() or self.swarm[player].moves > 100:
+                        reply["game_over"] = True
+                        reply["reward"] = -100
+                        print("Game over due to collision or moves > 100")
+                        self.reset_simulation()
+                    elif self.swarm[player].reached_goal(self.target_simulation):
+                        reply["reward"] = 300
+                        reply["score"] = self.get_score(player)
+                    elif self.is_target_found():
+                        reply["game_over"] = True
+                        reply["reward"] = 1000
+                        reply["score"] = self.get_score(player)
+                        print("Game over due to target found")
+                        self.reset_simulation()                        
+                    elif self.swarm[player].location.distance_to(self.target_simulation) < RADIUS_TARGET:
+                        reply["reward"] = 20
+                        reply["score"] = self.get_score(player)
+                    else:
+                        reply["reward"] = 5
+                        reply["score"] = self.get_score(player)
 
                     print("Sending : ", reply, "to player", player)
-
-                conn.sendall(str.encode(reply))
+                    
+                conn.sendall(json.dumps(reply).encode())
             except:
                 break
 

@@ -64,6 +64,17 @@ class GridField(object):
                 else:
                     pg.draw.rect(screen, (120, 120, 120), rect, 1)
 
+    def get_state_cell(self, cell):
+        '''
+            Get state of a cell
+            cell: tuple with row column
+            return: state of the cell 
+        '''
+        try:
+            return self.cells[cell[1]][cell[0]].state
+        except:
+            return OBSTACLE
+
     def get_size(self):
         '''
             Returns a tuple containing sizeof the grid :(#col,#row) 
