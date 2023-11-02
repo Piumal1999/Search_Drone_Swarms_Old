@@ -162,11 +162,14 @@ class Simulation(object):
         #     score = 0
 
         score = 0
+        # for _ in self.swarm:
+        #     if _.location.distance_to(self.target_simulation) < RADIUS_TARGET:
+        #         score += RADIUS_TARGET - (self.target_simulation - _.location).length()
+        #     else:
+        #         score += 0
+
         for _ in self.swarm:
-            if _.location.distance_to(self.target_simulation) < RADIUS_TARGET:
-                score += RADIUS_TARGET - (self.target_simulation - _.location).length()
-            else:
-                score += 0
+            score += _.score
 
         return score
 
@@ -193,24 +196,38 @@ class Simulation(object):
                     self.swarm[player].move(action)
                     self.swarm[player].moves += 1
 
-                    if self.is_collision() or self.swarm[player].moves > 100:
+                    if action == "0":
+                        self.swarm[player].score -= 1
+
+                    if self.is_collision():
+                        self.swarm[player].score -= 20
                         reply["game_over"] = True
-                        reply["reward"] = -100
+                        reply["reward"] = -20
+                        print("Game over due to collision")
+                        self.reset_simulation()                 
+                    elif self.swarm[player].moves > 100:
+                        self.swarm[player].score -= 20
+                        reply["game_over"] = True
+                        reply["reward"] = -10
                         print("Game over due to collision or moves > 100")
                         self.reset_simulation()
-                    elif self.swarm[player].reached_goal(self.target_simulation):
-                        reply["reward"] = 300
-                        reply["score"] = self.get_score(player)
                     elif self.is_target_found():
+                        self.swarm[player].score += 200
                         reply["game_over"] = True
-                        reply["reward"] = 1000
+                        reply["reward"] = 100
                         reply["score"] = self.get_score(player)
                         print("Game over due to target found")
-                        self.reset_simulation()                        
-                    elif self.swarm[player].location.distance_to(self.target_simulation) < RADIUS_TARGET:
+                        self.reset_simulation()
+                    elif self.swarm[player].reached_goal(self.target_simulation):
+                        self.swarm[player].score += 50
+                        reply["reward"] = 50
+                        reply["score"] = self.get_score(player)
+                    elif self.swarm[player].get_distance_to(self.target_simulation) < RADIUS_TARGET:
+                        self.swarm[player].score += 5
                         reply["reward"] = 20
                         reply["score"] = self.get_score(player)
                     else:
+                        self.swarm[player].score -= 1
                         reply["reward"] = 5
                         reply["score"] = self.get_score(player)
 

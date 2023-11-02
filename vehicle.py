@@ -16,6 +16,7 @@ class Vehicle(object):
         """
 
         self.moves = 0  # Number of moves done by drone
+        self.score = 0  # Score of drone
 
         # Variables used to move drone
         self.location = vec2(x, y)  # Position in screen
@@ -52,6 +53,9 @@ class Vehicle(object):
 
     def get_position(self):
         return self.location
+    
+    def get_distance_to(self, target):
+        return (target - self.location).length()
 
     def draw(self, window):
         """
